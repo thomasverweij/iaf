@@ -1,0 +1,10 @@
+/opt/mssql-tools/bin/sqlcmd -S localhost -U c##testiaf_user -P "c##testiaf_user"
+/opt/mssql-tools/bin/sqlcmd -S localhost -U wearefrank -P "wearefrank123"
+
+/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "MssqlPass123"
+
+
+select sp.name as login,sp.type_desc as login_type,case when sp.is_disabled = 1 then 'Disabled' else 'Enabled' end as status
+from sys.server_principals sp left join sys.sql_logins sl on sp.principal_id = sl.principal_id
+where sp.type not in ('G', 'R')
+order by sp.name;
