@@ -20,15 +20,15 @@ In order to run this container you'll need docker installed.
 
 #### Create image and container.
 
-If you want to create a docker container with MSSQl or Oracle server, open a console command, go to your home directory 
-FOR MSSQL CONTAINER:
-home\iaf\docker\IAF-MS-SQL
-and execute this command: 
+If you want to create a docker container with MSSQl or Oracle server, open a console command, go to your home directory. \
+FOR MSSQL CONTAINER: \
+home\iaf\docker\IAF-MS-SQL \
+and execute this command: \
 docker-compose up -d
 
-FOR ORACLE CONTAINER:
-home\iaf\docker\IAF-Oracle
-and execute this command: 
+FOR ORACLE CONTAINER: \
+home\iaf\docker\IAF-Oracle \
+and execute this command: \ 
 docker-compose --env-file docker/.env up -d
 
 you can see something like that:
