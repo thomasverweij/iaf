@@ -26,8 +26,8 @@ and execute this command:
 docker-compose up -d
 
 you can see something like that:
-$ docker-compose up -d
-Creating volume "iaf-ms-sql_db_data" with default driver
+$ docker-compose up -d \
+Creating volume "iaf-ms-sql_db_data" with default driver \
 Building ms-sqlserver
 Step 1/4 : FROM mcr.microsoft.com/mssql/server
 latest: Pulling from mssql/server
