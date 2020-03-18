@@ -42,10 +42,10 @@ Step 4/4 : CMD /bin/bash ./entrypoint.sh  \
  ---> Running in d6e83fde3a22  \
 Removing intermediate container d6e83fde3a22  \
  ---> bc1e68a2e558  \
-Successfully built bc1e68a2e558 \
+Successfully built bc1e68a2e558 
 
 
-To check our container you can type: \
+To check our container you can type: 
 
 docker ps -a
 
@@ -53,7 +53,7 @@ To get access inside of your container you can type: \
 [Windows] \
 winpty docker container exec -ti <container_ID> bash  \
 [Linux] \
-docker container exec -ti <container_ID> bash \
+docker container exec -ti <container_ID> bash 
 
-You can loggin in mssql using this command:
+You can loggin in mssql using this command: \
 /opt/mssql-tools/bin/sqlcmd -S localhost -U wearefrank_user -P "wearefrankPass01"
