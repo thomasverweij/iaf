@@ -28,7 +28,7 @@ docker-compose up -d
 
 FOR ORACLE CONTAINER: \
 home\iaf\docker\IAF-Oracle \
-and execute this command: \ 
+and execute this command: \
 docker-compose --env-file docker/.env up -d
 
 you can see something like that:
