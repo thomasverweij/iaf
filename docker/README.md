@@ -32,7 +32,7 @@ and execute this command: \
 docker-compose --env-file docker/.env up -d
 
 you can see something like that:
-$ docker-compose up -d \
+$ docker-compose up -d --buld \
 Creating volume "iaf-ms-sql_db_data" with default driver \
 Building ************
 Step 1/4 : FROM *******  \
