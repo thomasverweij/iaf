@@ -1,0 +1,51 @@
+node {
+    parameters {
+        choice(name: 'DBMS', choices: ['mysql','mssql','oracle','postgresql','mariadb'], description: 'Docker image for database')
+        choice(name: 'MQ', choices: ['activemq'], description: 'Docker image for queue')
+        choice(name: 'APP', choices: ['iaf-test-tomcat','iaf-test-websphere','iaf-test-wildlfy'], description: 'Docker image for build')
+    }
+    
+    def mvnHome, version
+
+    // stage('Cleanup Workspace') {
+    //         deleteDir()
+    // }
+
+    stage('Preparation') { 
+        // git 'https://github.com/thomasverweij/iaf.git'
+        // sh "git clean -f && git reset --hard origin/master"
+        mvnHome = tool 'apache-maven-3.6.3'
+        env.JAVA_HOME="${tool 'java-1.8.0-openjdk'}"
+        env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+        sh 'java -version'
+        env.MAVEN_OPTS="-Xmx4096m -XX:MaxPermSize=128m -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=1024M -XX:+CMSClassUnloadingEnabled"
+        def date = new Date()
+        def timestamp = date.format('yyyyMMdd.HHmmss')
+        def pom = readMavenPom file: 'pom.xml'
+        version = pom.version.replace("SNAPSHOT", timestamp)
+    }
+
+    stage('Build project') {
+        mvn_args = "clean install help:active-profiles -Pibissource,cmis,javadoc"
+        echo "Running maven with args: ${mvn_args}"
+        sh "'${mvnHome}/bin/mvn' -B ${mvn_args}" //--settings ~/.m2/settings.xml
+    }
+
+    stage("Docker build ${params.APP}") {
+        sh 'mvn install -f ./docker/appserver/Tomcat/pom.xml'
+    }
+
+    stage('Test') {
+        def dbms, mq, app
+        try {
+            dbms = docker.image("${params.DBMS}").run('-e "MYSQL_ROOT_PASSWORD=my-secret-pw"')
+            // mq =  docker.image("${params.MQ}").run()
+            app = docker.image("${params.APP}").run('-e "TESTENV=yolo"')
+            sh 'echo testing some stuff'
+        } finally {
+            dbms.stop()
+            // mq.stop()
+            app.stop()
+        }
+    }
+}

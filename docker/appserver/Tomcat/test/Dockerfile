@@ -16,6 +16,6 @@ COPY target/dependencies/frank/configuration/*-resources.jar /opt/frank/resource
 COPY target/dependencies/frank/configuration/*-configurations.jar /opt/frank/configurations/
 COPY target/dependencies/frank/testtool /opt/frank/testtool
 
-# Set permissions after copy, to improve startup time
-RUN /setPermissions.sh
-ENV SET_PERMISSIONS_ON_STARTUP=FALSE
+# # Set permissions after copy, to improve startup time
+# RUN /setPermissions.sh
+# ENV SET_PERMISSIONS_ON_STARTUP=FALSE
