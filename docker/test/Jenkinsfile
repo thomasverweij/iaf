@@ -1,0 +1,76 @@
+node {
+    parameters {
+        choice(name: 'DBMS', choices: ['mysql','mssql','oracle','postgresql','mariadb','h2'], description: 'Docker image for database')
+        choice(name: 'MQ', choices: ['none','activemq'], description: 'Docker image for queue')
+        choice(name: 'APPSERVER', choices: ['tomcat','websphere','wildlfy'], description: 'Docker image for build')
+    }
+    
+    def jmsActive = params.MQ != 'none'
+
+    def dockerConfig = [
+            tomcat: [
+                imageName: "iaf-test-tomcat",
+                buildCommand: "chmod +x ${env.WORKSPACE}/docker/appserver/Tomcat/src/scripts/*.sh && mvn install -f ${env.WORKSPACE}/docker/appserver/Tomcat/pom.xml",
+                runParams: "--mount type=bind,source=\"${env.WORKSPACE}/test/src/test/testtool\",target=/opt/frank/testtool-ext -e active.jms=${jmsActive} -e jdbc.dbms.default=${params.DBMS}"
+            ],
+            mysql: [
+                imageName: "iaf-test-db-mysql",
+                buildCommand: "docker build -t iaf-test-db-mysql -f ${env.WORKSPACE}/docker/dbms/MySQL/Dockerfile ${env.WORKSPACE}/docker/dbms/MySQL",
+                runParams: "-p 3307:3306"
+            ]   
+        ]
+
+    def mvnHome, version
+
+    // stage('Cleanup Workspace') {
+    //         deleteDir()
+    // }
+
+    // stage('Preparation') { 
+    //     git 'https://github.com/thomasverweij/iaf.git'
+    //     sh "git clean -f && git reset --hard origin/master"
+    //     mvnHome = tool 'apache-maven-3.6.3'
+    //     env.JAVA_HOME="${tool 'java-1.8.0-openjdk'}"
+    //     env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
+    //     sh 'java -version'
+    //     env.MAVEN_OPTS="-Xmx4096m -XX:MaxPermSize=128m -XX:MetaspaceSize=512M -XX:MaxMetaspaceSize=1024M -XX:+CMSClassUnloadingEnabled"
+    //     def date = new Date()
+    //     def timestamp = date.format('yyyyMMdd.HHmmss')
+    //     def pom = readMavenPom file: 'pom.xml'
+    //     version = pom.version.replace("SNAPSHOT", timestamp)
+    // }
+
+    // stage('Build project') {
+    //     mvn_args = "clean install help:active-profiles -Pibissource,cmis,javadoc"
+    //     echo "Running maven with args: ${mvn_args}"
+    //     sh "'${mvnHome}/bin/mvn' -B ${mvn_args}" //--settings ~/.m2/settings.xml
+    // }
+
+    stage("Docker build") {
+        if(params.DBMS != 'h2') {
+            sh "${dockerConfig[params.DBMS]["buildCommand"]}"
+        }
+
+        if(jmsActive) {
+            sh "${dockerConfig[params.MQ]["buildCommand"]}"
+        }
+
+        sh "${dockerConfig[params.APPSERVER]["buildCommand"]}"
+    }
+
+    stage('Test') {
+        def dbms, mq, app
+        try {
+            dbms = docker.image(dockerConfig[params.DBMS]["imageName"]).run(dockerConfig[params.DBMS]["runParams"])
+            app = docker.image(dockerConfig[params.APPSERVER]["imageName"]).run(dockerConfig[params.APPSERVER]["runParams"])
+            sh 'sleep 90'
+            sh "docker exec ${app.id} \
+            curl 'http://localhost:8080/iaf/larva/index.jsp' \
+            --data-raw 'execute=%2Fopt%2Ffrank%2Ftesttool%2F&scenariosrootdirectory=%2Fopt%2Ffrank%2Ftesttool%2F&waitbeforecleanup=100&loglevel=totals&autoscroll=true&submit=start' \
+            | grep 'All scenarios passed'"
+        } finally {
+            dbms.stop()
+            app.stop()
+        }
+    }
+}
